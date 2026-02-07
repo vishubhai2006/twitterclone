@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>X Clone</title>
+
+<style>
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+font-family:system-ui;
+}
+
+body{
+background:#000;
+color:#e7e9ea;
+}
+
+.app{
+display:grid;
+grid-template-columns:260px 1fr;
+max-width:1100px;
+margin:auto;
+}
+
+.sidebar{
+padding:20px;
+border-right:1px solid #2f3336;
+}
+
+.logo{
+font-size:32px;
+margin-bottom:25px;
+}
+
+.nav-item{
+padding:12px;
+border-radius:25px;
+font-size:18px;
+cursor:pointer;
+}
+
+.nav-item:hover{
+background:#181818;
+}
+
+.post-btn{
+margin-top:20px;
+background:#1d9bf0;
+color:#fff;
+border:none;
+padding:12px;
+border-radius:25px;
+width:100%;
+cursor:pointer;
+}
+
+.feed{
+border-right:1px solid #2f3336;
+}
+
+.feed-header{
+padding:15px;
+font-size:20px;
+border-bottom:1px solid #2f3336;
+}
+
+.composer{
+display:flex;
+gap:10px;
+padding:15px;
+border-bottom:1px solid #2f3336;
+}
+
+.avatar{
+width:48px;
+height:48px;
+border-radius:50%;
+object-fit:cover;
+}
+
+textarea{
+background:none;
+border:none;
+color:#fff;
+width:100%;
+font-size:18px;
+outline:none;
+resize:none;
+}
+
+.actions{
+text-align:right;
+}
+
+.actions button{
+background:#1d9bf0;
+color:#fff;
+border:none;
+padding:6px 16px;
+border-radius:20px;
+cursor:pointer;
+}
+
+.tweet{
+display:flex;
+gap:10px;
+padding:15px;
+border-bottom:1px solid #2f3336;
+}
+
+.tweet:hover{
+background:#080808;
+}
+
+.name{
+font-weight:bold;
+}
+
+.handle{
+color:#71767b;
+}
+
+.text{
+margin:6px 0;
+}
+
+.tweet-actions{
+display:flex;
+gap:20px;
+margin-top:6px;
+flex-wrap:wrap;
+}
+
+.tweet-actions span{
+cursor:pointer;
+color:#71767b;
+}
+
+.tweet-actions span:hover{
+color:#1d9bf0;
+}
+
+.auth{
+max-width:400px;
+margin:100px auto;
+text-align:center;
+}
+
+input{
+width:100%;
+padding:12px;
+margin:10px 0;
+border-radius:20px;
+border:none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="authPage" class="auth">
+<h2>Login</h2>
+<input id="loginUser" placeholder="Username">
+<input id="loginPass" type="password">
+<button onclick="login()">Login</button>
+<p>New user?
+<span style="color:#1d9bf0;cursor:pointer" onclick="showSignup()">Create Account</span>
+</p>
+</div>
+
+<div id="signupPage" class="auth" style="display:none">
+<h2>Signup</h2>
+<input id="regUser" placeholder="Username">
+<input id="regPass" type="password">
+<button onclick="signup()">Signup</button>
+<p onclick="showLogin()" style="color:#1d9bf0;cursor:pointer">Back to login</p>
+</div>
+
+<div id="app" style="display:none">
+
+<div class="app">
+
+<div class="sidebar">
+<div class="logo">𝕏</div>
+<div class="nav-item" onclick="showHome()">Home</div>
+<div class="nav-item" onclick="showProfile()">Profile</div>
+<div class="nav-item" onclick="logout()">Logout</div>
+<button class="post-btn" onclick="showHome()">Post</button>
+</div>
+
+<div class="feed">
+
+<div class="feed-header">Home</div>
+
+<div class="composer">
+<img class="avatar" 
+src="">
+
+<div style="width:100%">
+<textarea id="tweetInput" maxlength="280"
+placeholder="What’s happening?"
+oninput="updateCount()"></textarea>
+
+<div style="display:flex;justify-content:space-between;">
+<small id="charCount">0 / 280</small>
+
+<div class="actions">
+<button onclick="postTweet()">Post</button>
+</div>
+</div>
+</div>
+</div>
+
+<div id="feed"></div>
+
+</div>
+</div>
+
+<script>
+
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let tweets = JSON.parse(localStorage.getItem("tweets")) || [];
+let currentUser = localStorage.getItem("currentUser");
+
+if(currentUser){
+showApp();
+renderTweets();
+}
+
+function showSignup(){
+authPage.style.display="none";
+signupPage.style.display="block";
+}
+
+function showLogin(){
+signupPage.style.display="none";
+authPage.style.display="block";
+}
+
+function signup(){
+users.push({
+user:regUser.value,
+pass:regPass.value,
+photo:""
+});
+
+localStorage.setItem("users",JSON.stringify(users));
+alert("Account Created!");
+showLogin();
+}
+
+function login(){
+let me = users.find(yoo =>
+yoo.user===loginUser.value &&
+yoo.pass===loginPass.value
+);
+
+if(me){
+currentUser = me.user;
+localStorage.setItem("currentUser",currentUser);
+showApp();
+renderTweets();
+}else{
+alert("Invalid Login");
+}
+}
+
+function logout(){
+localStorage.removeItem("currentUser");
+location.reload();
+}
+
+function showApp(){
+authPage.style.display="none";
+signupPage.style.display="none";
+app.style.display="block";
+}
+
+function updateCount(){
+charCount.innerText =
+tweetInput.value.length + " / 280";
+}
+
+function postTweet(){
+if(tweetInput.value==="") return;
+
+tweets.push({
+id:Date.now(),
+user:currentUser,
+text:tweetInput.value,
+likes:[],
+retweets:[]
+});
+
+localStorage.setItem("tweets",JSON.stringify(tweets));
+tweetInput.value="";
+charCount.innerText="0 / 280";
+renderTweets();
+}
+
+function likeTweet(id){
+let yoo = tweets.find(me => me.id===id);
+
+if(yoo.likes.includes(currentUser)){
+yoo.likes = yoo.likes.filter(u=>u!==currentUser);
+}else{
+yoo.likes.push(currentUser);
+}
+
+localStorage.setItem("tweets",JSON.stringify(tweets));
+renderTweets();
+}
+
+function retweet(id){
+let yoo = tweets.find(me => me.id===id);
+
+if(!yoo.retweets.includes(currentUser)){
+yoo.retweets.push(currentUser);
+
+tweets.push({
+id:Date.now(),
+user:currentUser,
+text:"🔁 "+yoo.text,
+likes:[],
+retweets:[]
+});
+}
+
+localStorage.setItem("tweets",JSON.stringify(tweets));
+renderTweets();
+}
+
+function deleteTweet(id){
+tweets = tweets.filter(yoo => yoo.id!==id);
+localStorage.setItem("tweets",JSON.stringify(tweets));
+renderTweets();
+}
+
+function renderTweets(){
+feed.innerHTML="";
+
+tweets.slice().reverse().forEach(yoo=>{
+
+let heart =
+yoo.likes.includes(currentUser) ? "❤️" : "🤍";
+
+feed.innerHTML += `
+<div class="tweet">
+<img class="avatar"
+src="g">
+
+<div>
+<div>
+<span class="name">${yoo.user}</span>
+<span class="handle">@${yoo.user}</span>
+</div>
+
+<div class="text">${yoo.text}</div>
+
+<div class="tweet-actions">
+<span onclick="likeTweet(${yoo.id})">${heart} ${yoo.likes.length}</span>
+<span onclick="retweet(${yoo.id})">🔁 ${yoo.retweets.length}</span>
+${yoo.user===currentUser ? `<span onclick="deleteTweet(${yoo.id})">🗑️</span>` : ""}
+</div>
+
+</div>
+</div>
+`;
+});
+}
+
+function showProfile(){
+feed.innerHTML = `
+<div style="padding:40px;text-align:center;">
+<img src=""
+style="width:120px;height:120px;border-radius:50%;margin-bottom:15px">
+
+<div style="font-size:26px;font-weight:bold">
+${currentUser}
+</div>
+
+<div style="color:#71767b;font-size:18px">
+@${currentUser}
+</div>
+</div>
+`;
+}
+
+function showHome(){
+renderTweets();
+}
+
+</script>
+
+</body>
+</html>
